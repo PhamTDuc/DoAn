@@ -2,24 +2,62 @@ from typing import TypedDict, NamedTuple
 import numpy as np
 from datetime import datetime
 
+print("Module Utility in Package")
+class CONSTANT():
+    __slots__ = ()
+
+    def __new__(cls, *args, **kwargs):
+        raise RuntimeError("CONSTANT class can't have instances")
+
+    PI = 3.14159265358979323846
+    G = 6.67408 * 10**-20  # Gravitional Constant (km^3 kg^-1 s^-2)
+    M = 5.972 * 10**24  # Earth Mass (kg)
+    R = 6367.5  # Earth Radius(km)
+    GM = G * M  # Earth's standard gravitational parameter [km^3.s^-2]
 
 class TypeOE(TypedDict, total=False):
-    """ - e: eccentricity                       [ ]
-        - a: semimajor axis                     [km]
-        - i: inclination                        [rad]
-        - ra: longitude of the ascending node   [rad]
-        - w: argument of periapsis              [rad]
-        - MA: mean anomaly                      [rad]
+    """ ISS (ZARYA)
+    1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927
+    2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537
+
+    1   01–01   Line number 2
+    2   03–07   Satellite Catalog number                        25544
+    3   09–16   Inclination (degrees)                           51.6416
+    4   18–25   Right Ascension of the Ascending Node (degrees) 247.4627
+    5   27–33   Eccentricity (decimal point assumed)            0006703
+    6   35–42   Argument of Perigee (degrees)                   130.5360
+    7   44–51   Mean Anomaly (degrees)                          325.0288
+    8   53–63   Mean Motion (revolutions per day)               15.72125391
+    9   64–68   Revolution number at epoch (revolutions)        56353
+    10  69–69   Checksum (modulo 10)                            7
+
+
     """
     eccentricity: float
     semimajor_axis: float
     inclination: float
     right_ascension: float
     argument_of_perigee: float
-    mena_anomaly: float
+    mean_anomaly: float
 
+    static = CONSTANT.GM**(1/3)
 
-class TypeLadLong(NamedTuple):
+    @classmethod
+    def calSemimajorAxis(cls, mean_motion:float)->float:
+        """The TLE gives mean motion (n) in rev/day. This needs to be converted to rad/s which can be accomplished by multiplying the n TLE value by 2π/86400.
+        Therefore, to go directly from n in TLE to the semi-major axis a. We can use the following formula:
+                GM^(1/3)
+        a =___________________________
+
+            (2π*mean_motion *  /86400)^(2/3)
+        For n=15.5918272revday, we get a=6768.16km.
+        """
+
+        a = cls.static
+        a /= (2*CONSTANT.PI*mean_motion/86400)**(2/3)
+        return a
+
+class TypeLatLong(NamedTuple):
     """The "latitude" (abbreviation: Lat., φ, or phi) of a point on Earth's surface is the angle between the equatorial plane and the straight line that passes through that point and through (or close to) the center of the Earth.
     Lines joining points of the same latitude trace circles on the surface of Earth called parallels, as they are parallel to the Equator and to each other. 
     The North Pole is 90° N; the South Pole is 90° S. The 0° parallel of latitude is designated the Equator, the fundamental plane of all geographic coordinate systems. 
@@ -33,11 +71,11 @@ class TypeLadLong(NamedTuple):
     The antipodal meridian of Greenwich is both 180°W and 180°E. This is not to be conflated with the International Date Line, 
     which diverges from it in several places for political and convenience reasons, including between far eastern Russia and the far western Aleutian Islands.
     """
-    ladtitude: float
+    lattitude: float
     longtitude: float
 
     def __repr__(self):
-        return f"LadLong(Ladtitude={self.ladtitude}, Longtitude={self.longtitude})"
+        return f"LatLong(Lattitude={self.lattitude}, Longtitude={self.longtitude})"
 
 
 class TypeXYZ(NamedTuple):
@@ -50,19 +88,6 @@ class TypeXYZ(NamedTuple):
 
     def __repr__(self):
         return f"Coordinate(X={self.x:0.4f}, Y={self.y:0.4f}, Z={self.z:g})"
-
-
-class CONSTANT():
-    __slots__ = ()
-
-    def __new__(cls, *args, **kwargs):
-        raise RuntimeError("CONSTANT class can't have instances")
-
-    PI = 3.14159265358979323846
-    G = 6.67408 * 10**-20  # Gravitional Constant (km^3 kg^-1 s^-2)
-    M = 5.972 * 10**24  # Earth Mass (kg)
-    R = 6367.5  # Earth Radius(km)
-    GM = G * M  # Earth's standard gravitational parameter [km^3.s^-2]
 
 
 # CosinMatrix Transfrom ECI to PQW:
@@ -90,7 +115,9 @@ def calMeanAnomaly(M0: float, a: float, t: float) -> float:
     return M0 + 2 * CONSTANT.PI / T * t
 
 # Calculate EccentricAbnomaly from MeanAbnomaly Using Newton Method
-def calEccentricAnomaly(M, e, E0, repeated=10000, alias=0.1) -> float:
+
+
+def calEccentricAnomaly(M, e, E0=1, repeated=10000, alias=0.1) -> float:
     """
     Using Kepler Equation to solve E(rad)
     M = E - e * sin(E)
@@ -144,17 +171,26 @@ def getRie(time: datetime=datetime.now()) -> np.array:
 
 
 # Coordinates in Lad and Long in ECI
-def toECIfromLadLong(lad: float=0, long: float=0, time: datetime=datetime.now()) -> TypeXYZ:
-    x = CONSTANT.R * np.cos(lad) * np.cos(long)
-    y = CONSTANT.R * np.cos(lad) * np.sin(long)
-    z = CONSTANT.R * np.sin(lad)
+def toECIfromLatLong(location:TypeLatLong  , time: datetime=datetime.now()) -> np.array:
+    x = CONSTANT.R * np.cos(location.lattitude) * np.cos(location.longtitude)
+    y = CONSTANT.R * np.cos(location.lattitude) * np.sin(location.longtitude)
+    z = CONSTANT.R * np.sin(location.lattitude)
     coord = np.array([x, y, z])
     coord = getRie(time).T @ coord
-    return TypeXYZ(*coord)
+    return coord
+
+
+def normalize(vec: np.array) -> np.array:
+    """Normalize 1D Vector Array 
+    """
+    norm = np.linalg.norm(vec)
+    if norm < 0.001:
+        return vec
+    return vec / norm
 
 
 if __name__ == "__main__":
     print(CONSTANT.PI)
     print(CONSTANT.G)
-    print(CONSTANT.M)
-    print(toECIfromLadLong())
+    print(CONSTANT.GM)
+    # print(toECIfromLatLong())
