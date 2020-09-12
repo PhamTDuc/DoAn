@@ -7,39 +7,26 @@ from orbital_elements import calc_oe_from_sv
 
 class Simulation(object):
     def __init__(self, OE: TypeOE, observer: TypeLatLong, E0: float = 1, time: datetime = datetime.now()) -> None:
-        self.__OE = OE.copy()
-        self.eccentric_anomaly = calEccentricAnomaly(OE['mean_anomaly'], OE['eccentricity'], E0)
-        self.__observer = observer  
-        self.__time = time  
+        self._OE = OE.copy()
+        self.eccentric_anomaly = calEccentricAnomaly(OE.mean_anomaly, OE.eccentricity, E0)
+        self._observer = observer
+        self._time = time
 
     def _update(self, dt: float) -> None:
-        """Recalculate MeanAbnomaly  and EccentricAnomaly after dt
-        """
-        self.__OE['mean_anomaly'] = calMeanAnomaly(self.__OE['mean_anomaly'], self.__OE['semimajor_axis'], dt)
-        self.eccentric_anomaly = calEccentricAnomaly(self.__OE['mean_anomaly'], self.__OE['eccentricity'], self.eccentric_anomaly)
-
-    def _calPosPQW(self, dt: float) -> np.array:
-        """Calculate Position Vector of Satellite in PQW Frame
-        """
-        self._update(dt)
-        return calVecInPQW(self.__OE['semimajor_axis'], self.__OE['eccentricity'], self.eccentric_anomaly)
+        self._OE.mean_anomaly = calMeanAnomaly(slef._OE.mean_anomaly, self._OE.semimajor_axis, dt)
+        self._OE.eccentric_anomaly = calEccentricAnomaly(self._OE.mean_anomaly, self._OE.eccentric_anomaly, alias=1)
 
     def _getObserverECI(self, dt: float) -> np.array:
-        return toECIfromLatLong(self.__observer, time=self.__time + timedelta(seconds=dt))
+        return toECIfromLatLong(self._observer, time=self._time + timedelta(second=dt))
 
-    def _getPosInECI(self, dt:float) -> np.array:
-        pos_pqw = self._calPosPQW(dt)
-        toECI = getMatECItoPQW(i=self.__OE['inclination'], omega=self.__OE['argument_of_perigee'], sigma=self.__OE['right_ascension'])
-        coord = toECI.T @ pos_pqw
-        return coord
-
-    def getRie(self, dt: float) -> np.array:
-        """Calculate Rie from self.__time + dt(second)
-        """
-        return getRie(self.__time + timedelta(seconds=dt))
+    def _getPosInECI(self) -> np.array:
+        pos_pqw = calVecInPQW(self._OE.semimajor_axis, self._OE.eccentricity, self.eccentric_anomaly)
+        toECI = getMatECItoPQW(i=self._OE.inclination, omega=self._OE.argument_of_perigee, sigma=self._OE.right_ascension)
+        return toECI.T @ pos_pqw
 
     def getAllCoords(self, dt: float) -> Tuple[np.array, np.array]:
-        pos = self._getPosInECI(dt)
+        self._update(dt)
+        pos = self._getPosInECI()
         observer = self._getObserverECI(dt)
         return observer, pos
 
@@ -128,18 +115,6 @@ class OrbitCalculate(object):
         return calc_oe_from_sv(r2, v2)
 
 
-"""
-TISAT 1                 
-1 36799U 10035E   20215.46271709  .00000102  00000-0  16380-4 0  9994
-2 36799  98.1977  27.5125 0012384 172.8977 187.2418 14.91391657 545784
-
-"""
-
 if __name__ == "__main__":
-    OE:TypeOE ={"eccentricity": 0.0012384, "inclination":98.1977, "right_ascension":27.5125, "argument_of_perigee":172.8977, "mean_anomaly":187.2418,"semimajor_axis":TypeOE.calSemimajorAxis(14.91391657)}
-    observer:TypeLatLong = TypeLatLong(21.047198, 105.800237) # 18, Hoang Quoc Viet, Cau Giay, Ha Noi, Viet Nam
-    time_point = datetime(year=2020, month=8, day=15, hour=10, tzinfo=None)  # Time in UTC
-    simulation  = Simulation(OE, observer, time = time_point)
-    orbitcalulator = OrbitCalculate(simulation)
-    new_OE = orbitcalulator.calculate([3900, 4000, 4100])
-    print(new_OE)
+    OE = TypeOE(eccentricity=0.0012384, inclination=98.1977, right_ascension=27.5125, argument_of_perigee=172.8977, mean_anomaly=187.2418, mean_motion=14.91391657)
+    print(OE)

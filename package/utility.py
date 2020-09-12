@@ -1,8 +1,11 @@
 from typing import TypedDict, NamedTuple
+from dataclasses import dataclass
 import numpy as np
 from datetime import datetime
 
 print("Module Utility in Package")
+
+
 class CONSTANT():
     __slots__ = ()
 
@@ -15,7 +18,9 @@ class CONSTANT():
     R = 6367.5  # Earth Radius(km)
     GM = G * M  # Earth's standard gravitational parameter [km^3.s^-2]
 
-class TypeOE(TypedDict, total=False):
+
+@dataclass
+class TypeOE:
     """ ISS (ZARYA)
     1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927
     2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537
@@ -40,22 +45,26 @@ class TypeOE(TypedDict, total=False):
     argument_of_perigee: float
     mean_anomaly: float
 
-    static = CONSTANT.GM**(1/3)
+    static = CONSTANT.GM**(1 / 3)
 
-    @classmethod
-    def calSemimajorAxis(cls, mean_motion:float)->float:
-        """The TLE gives mean motion (n) in rev/day. This needs to be converted to rad/s which can be accomplished by multiplying the n TLE value by 2π/86400.
-        Therefore, to go directly from n in TLE to the semi-major axis a. We can use the following formula:
-                GM^(1/3)
-        a =___________________________
+    """Using mean_motion to CALCULATE semimajor_axis IF semimajor_axis is NOT PROVIDED"""
 
-            (2π*mean_motion *  /86400)^(2/3)
-        For n=15.5918272revday, we get a=6768.16km.
-        """
+    def __init__(self, eccentricity: float=None, semimajor_axis=None, inclination: float=None, right_ascension: float=None, argument_of_perigee: float=None, mean_anomaly: float=None, mean_motion: float = None):
+        self.eccentricity = eccentricity
+        self.inclination = inclination
+        self.right_ascension = right_ascension
+        self.argument_of_perigee = argument_of_perigee
+        self.mean_anomaly = mean_anomaly
 
-        a = cls.static
-        a /= (2*CONSTANT.PI*mean_motion/86400)**(2/3)
-        return a
+        if semimajor_axis is None:
+            if mean_motion is not None:
+                self.semimajor_axis = CONSTANT.GM**(1 / 3) / (2 * CONSTANT.PI * mean_motion / 86400)**(2 / 3)
+        else:
+            self.semimajor_axis = semimajor_axis
+
+    def __repr__(self):
+        return f"OE(eccentricity: {self.eccentricity}, semimajor_axis: {self.semimajor_axis}, inclination: {self.inclination},right_ascension: {self.right_ascension}, argument_of_perigee: {self.argument_of_perigee}, mean_anomaly: {self.mean_anomaly})"
+
 
 class TypeLatLong(NamedTuple):
     """The "latitude" (abbreviation: Lat., φ, or phi) of a point on Earth's surface is the angle between the equatorial plane and the straight line that passes through that point and through (or close to) the center of the Earth.
@@ -71,11 +80,11 @@ class TypeLatLong(NamedTuple):
     The antipodal meridian of Greenwich is both 180°W and 180°E. This is not to be conflated with the International Date Line, 
     which diverges from it in several places for political and convenience reasons, including between far eastern Russia and the far western Aleutian Islands.
     """
-    lattitude: float
+    latitude: float
     longtitude: float
 
     def __repr__(self):
-        return f"LatLong(Lattitude={self.lattitude}, Longtitude={self.longtitude})"
+        return f"LatLong(Latitude={self.latitude}, Longtitude={self.longtitude})"
 
 
 class TypeXYZ(NamedTuple):
@@ -101,9 +110,9 @@ def getMatECItoPQW(omega: float=0, i: float=0, sigma: float=0) -> np.array:
 
 
 # Calculate Mean Abnomaly
-def calMeanAnomaly(M0: float, a: float, t: float) -> float:
+def calMeanAnomaly(M0: float, a: float, dt: float) -> float:
     """
-    Calculate MeanAbnomaly of Satellite which Semimajor Axis a(km) after t(s) period
+    Calculate MeanAbnomaly of Satellite which Semimajor Axis a(km) after dt(s) period
     Kepler III
     a^3      GM
    ----- = -------
@@ -112,7 +121,7 @@ def calMeanAnomaly(M0: float, a: float, t: float) -> float:
     M = M0 + 2 pi*t/T
     """
     T = np.sqrt(4 * a**3 * CONSTANT.PI**2 / CONSTANT.G / CONSTANT.M)
-    return M0 + 2 * CONSTANT.PI / T * t
+    return M0 + 2 * CONSTANT.PI / T * dt
 
 # Calculate EccentricAbnomaly from MeanAbnomaly Using Newton Method
 
@@ -162,7 +171,7 @@ def getGMST(time: datetime = datetime.now()) -> float:
     return GMST
 
 
-# Calculate Rotation Frame from ECEF to ECI
+# Rotation Frame from ECEF to ECI
 def getRie(time: datetime=datetime.now()) -> np.array:
     gmst = getGMST(time)
     rad = CONSTANT.PI * gmst / 180
@@ -171,10 +180,10 @@ def getRie(time: datetime=datetime.now()) -> np.array:
 
 
 # Coordinates in Lad and Long in ECI
-def toECIfromLatLong(location:TypeLatLong  , time: datetime=datetime.now()) -> np.array:
-    x = CONSTANT.R * np.cos(location.lattitude) * np.cos(location.longtitude)
-    y = CONSTANT.R * np.cos(location.lattitude) * np.sin(location.longtitude)
-    z = CONSTANT.R * np.sin(location.lattitude)
+def toECIfromLatLong(location: TypeLatLong, time: datetime=datetime.now()) -> np.array:
+    x = CONSTANT.R * np.cos(location.latitude) * np.cos(location.longtitude)
+    y = CONSTANT.R * np.cos(location.latitude) * np.sin(location.longtitude)
+    z = CONSTANT.R * np.sin(location.latttude)
     coord = np.array([x, y, z])
     coord = getRie(time).T @ coord
     return coord

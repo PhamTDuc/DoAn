@@ -98,15 +98,15 @@ OE = calc_oe_from_sv(vec_r2, v2)
 print("OE=", OE)
 
 # Calculate MeanAbnomaly and EccentricAbnomaly
-mean_anomaly = calMeanAnomaly(OE['mean_anomaly'], OE['semimajor_axis'], t1)
+mean_anomaly = calMeanAnomaly(OE.mean_anomaly, OE.semimajor_axis, t1)
 print("Mean Anomaly", mean_anomaly)
-eccentric_anomaly = calEccentricAnomaly(mean_anomaly, OE['eccentricity'], 1)
+eccentric_anomaly = calEccentricAnomaly(mean_anomaly, OE.eccentricity, 1)
 print("EccentricAnomaly", eccentric_anomaly)
 
 
 # Find Position in PQW
-r1_PQW = calVecInPQW(OE['semimajor_axis'], OE['eccentricity'], eccentric_anomaly)
-toECI = getMatECItoPQW(i=OE['inclination'], omega=OE['argument_of_perigee'], sigma=OE['right_ascension'])
+r1_PQW = calVecInPQW(OE.semimajor_axis, OE.eccentricity, eccentric_anomaly)
+toECI = getMatECItoPQW(i=OE.inclination, omega=OE.argument_of_perigee, sigma=OE.right_ascension)
 print("r1 in PQW", r1_PQW)
 print(vec_r1)
 print("r1 in ECI", np.linalg.inv(toECI) @ r1_PQW)
