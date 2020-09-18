@@ -3,8 +3,6 @@ from dataclasses import dataclass
 import numpy as np
 from datetime import datetime
 
-print("Module Utility in Package")
-
 
 class CONSTANT():
     __slots__ = ()
@@ -181,9 +179,10 @@ def getRie(time: datetime=datetime.now()) -> np.array:
 
 # Coordinates in Lad and Long in ECI
 def toECIfromLatLong(location: TypeLatLong, time: datetime=datetime.now()) -> np.array:
-    x = CONSTANT.R * np.cos(location.latitude) * np.cos(location.longtitude)
-    y = CONSTANT.R * np.cos(location.latitude) * np.sin(location.longtitude)
-    z = CONSTANT.R * np.sin(location.latttude)
+
+    x = CONSTANT.R * np.cos(np.deg2rad(location.latitude)) * np.cos(np.deg2rad(location.longtitude))
+    y = CONSTANT.R * np.cos(np.deg2rad(location.latitude)) * np.sin(np.deg2rad(location.longtitude))
+    z = CONSTANT.R * np.sin(np.deg2rag(location.latitude))
     coord = np.array([x, y, z])
     coord = getRie(time).T @ coord
     return coord
