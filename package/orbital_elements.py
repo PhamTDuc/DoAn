@@ -1,6 +1,5 @@
 import numpy as np
 from .utility import CONSTANT, TypeOE
-import utility
 
 
 def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
@@ -90,7 +89,3 @@ def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
     OE.semimajor_axis = a
 
     return OE
-
-
-if __name__ == "__main__":
-    print("Hello the world")

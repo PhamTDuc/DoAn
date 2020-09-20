@@ -1,23 +1,24 @@
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Tuple
-from utility import (CONSTANT, TypeOE, TypeLatLong, TypeXYZ, normalize, calMeanAnomaly, calEccentricAnomaly, calVecInPQW, toECIfromLatLong, getRie, getMatECItoPQW)
-from orbital_elements import calc_oe_from_sv
+from .utility import (CONSTANT, TypeOE, TypeLatLong, TypeXYZ, normalize, calMeanAnomaly, calEccentricAnomaly, calVecInPQW, toECIfromLatLong, getRie, getMatECItoPQW)
+from .orbital_elements import calc_oe_from_sv
+import dataclasses
 
 
 class Simulation(object):
     def __init__(self, OE: TypeOE, observer: TypeLatLong, E0: float = 1, time: datetime = datetime.now()) -> None:
-        self._OE = OE.copy()
-        self.eccentric_anomaly = calEccentricAnomaly(OE.mean_anomaly, OE.eccentricity, E0)
+        self._OE = dataclasses.replace(OE)
+        self.eccentric_anomaly = None
         self._observer = observer
         self._time = time
 
     def _update(self, dt: float) -> None:
-        self._OE.mean_anomaly = calMeanAnomaly(slef._OE.mean_anomaly, self._OE.semimajor_axis, dt)
-        self._OE.eccentric_anomaly = calEccentricAnomaly(self._OE.mean_anomaly, self._OE.eccentric_anomaly, alias=1)
+        self._OE.mean_anomaly = calMeanAnomaly(self._OE.mean_anomaly, self._OE.semimajor_axis, dt)
+        self.eccentric_anomaly = calEccentricAnomaly(self._OE.mean_anomaly, self.eccentric_anomaly, alias=1)
 
     def _getObserverECI(self, dt: float) -> np.array:
-        return toECIfromLatLong(self._observer, time=self._time + timedelta(second=dt))
+        return toECIfromLatLong(self._observer, time=self._time + timedelta(seconds=dt))
 
     def _getPosInECI(self) -> np.array:
         pos_pqw = calVecInPQW(self._OE.semimajor_axis, self._OE.eccentricity, self.eccentric_anomaly)
@@ -35,12 +36,10 @@ class OrbitCalculate(object):
 
     def __init__(self, sim: Simulation) -> None:
         self.sim = sim
+        self.observers = []
+        self.directions = []
 
-    def calculate(self, time_points: Tuple[float, float, float], r0: float=600, repeated: int=10000, alias: float = 0.1) -> TypeOE:
-
-        if (repeated < 0 or alias < 0):
-            raise ValueError("Repeated must be int. Repeated and Alias must be positive.")
-        observers = []
+    def preCalculate(time_points: Tuple[float, float, float]):
         directions = []
 
         for dt in time_points:
@@ -48,31 +47,40 @@ class OrbitCalculate(object):
             direction = normalize(pos - observer)
             observers.append(observer)
             directions.append(direction)
-        print(directions)
 
+    def calculate(self, time_points: Tuple[float, float, float], r0: float=600, repeated: int=10000, alias: float = 0.1, shouldPrecalculate: bool=True) -> TypeOE:
+
+        if (repeated < 0 or alias < 0):
+            raise ValueError("Repeated must be int. Repeated and Alias must be positive.")
+
+        if(shouldPrecalculate):
+            preCalculate(time_points)
+
+        assert len(self.observers) == 3, "Obeservers must be array of 3 Vec3"
+        assert len(self.directions) == 3, "Obeservers must be array of 3 Vec3"
         t1 = time_points[0] - time_points[1]
         t3 = time_points[2] - time_points[1]
         t = t3 - t1
 
-        D0 = directions[0] @ np.cross(directions[1], directions[2])
-        D11 = observers[0] @ np.cross(directions[1], directions[2])
-        D21 = observers[1] @ np.cross(directions[1], directions[2])
-        D31 = observers[2] @ np.cross(directions[1], directions[2])
+        D0 = self.directions[0] @ np.cross(self.directions[1], self.directions[2])
+        D11 = self.observers[0] @ np.cross(self.directions[1], self.directions[2])
+        D21 = self.observers[1] @ np.cross(self.directions[1], self.directions[2])
+        D31 = self.observers[2] @ np.cross(self.directions[1], self.directions[2])
 
-        D12 = observers[0] @ np.cross(directions[0], directions[2])
-        D22 = observers[1] @ np.cross(directions[0], directions[2])
-        D32 = observers[2] @ np.cross(directions[0], directions[2])
+        D12 = self.observers[0] @ np.cross(self.directions[0], self.directions[2])
+        D22 = self.observers[1] @ np.cross(self.directions[0], self.directions[2])
+        D32 = self.observers[2] @ np.cross(self.directions[0], self.directions[2])
 
-        D13 = observers[0] @ np.cross(directions[0], directions[1])
-        D23 = observers[1] @ np.cross(directions[0], directions[1])
-        D33 = observers[2] @ np.cross(directions[0], directions[1])
+        D13 = self.observers[0] @ np.cross(self.directions[0], self.directions[1])
+        D23 = self.observers[1] @ np.cross(self.directions[0], self.directions[1])
+        D33 = self.observers[2] @ np.cross(self.directions[0], self.directions[1])
 
         # Parameters for calculating "r2"
         A = (-D12 * t3 / t + D22 + D32 * t1 / t) / D0
         B = (-D12 * (t**2 - t3**2) * t3 / t + D32 * (t**2 - t1**2) * t1 / t) / 6 / D0
-        E = observers[1] @ directions[1]
+        E = self.observers[1] @ self.directions[1]
 
-        a = -(A**2 + 2 * A * E + np.linalg.norm(observers[1])**2)
+        a = -(A**2 + 2 * A * E + np.linalg.norm(self.observers[1])**2)
         b = -2 * CONSTANT.GM * B * (A + E)
         c = -CONSTANT.GM**2 * B**2
 
@@ -100,9 +108,9 @@ class OrbitCalculate(object):
         mul_p3 = (-C3 * D13 / C1 + D23 / C3 - D33) / D0
 
         # Find Position Vectors of Satellite (r1, r2, r3)
-        r1 = observers[0] + mul_p1 * directions[0]
-        r2 = observers[1] + mul_p2 * directions[1]
-        r3 = observers[2] + mul_p3 * directions[2]
+        r1 = self.observers[0] + mul_p1 * self.directions[0]
+        r2 = self.observers[1] + mul_p2 * self.directions[1]
+        r3 = self.observers[2] + mul_p3 * self.directions[2]
 
         # Find Velocity of Satellite at t2 (v2)
         f1 = 1 - CONSTANT.GM * t1**2 / 2 / r
