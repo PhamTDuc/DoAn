@@ -39,14 +39,15 @@ class OrbitCalculate(object):
         self.observers = []
         self.directions = []
 
-    def preCalculate(time_points: Tuple[float, float, float]):
-        directions = []
+    def preCalculate(self, time_points: Tuple[float, float, float]):
+        self.observers = []
+        self.directions = []
 
         for dt in time_points:
             observer, pos = self.sim.getAllCoords(dt)
             direction = normalize(pos - observer)
-            observers.append(observer)
-            directions.append(direction)
+            self.observers.append(observer)
+            self.directions.append(direction)
 
     def calculate(self, time_points: Tuple[float, float, float], r0: float=600, repeated: int=10000, alias: float = 0.1, shouldPrecalculate: bool=True) -> TypeOE:
 
