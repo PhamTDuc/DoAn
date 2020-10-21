@@ -15,7 +15,7 @@ class Simulation(object):
 
     def _update(self, dt: float) -> None:
         self._OE.mean_anomaly = calMeanAnomaly(self._OE.mean_anomaly, self._OE.semimajor_axis, dt)
-        self.eccentric_anomaly = calEccentricAnomaly(self._OE.mean_anomaly, self.eccentric_anomaly, alias=1)
+        self.eccentric_anomaly = calEccentricAnomaly(self._OE.mean_anomaly, self._OE.eccentricity, alias=1)
 
     def _getObserverECI(self, dt: float) -> np.array:
         return toECIfromLatLong(self._observer, time=self._time + timedelta(seconds=dt))

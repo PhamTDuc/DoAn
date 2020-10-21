@@ -184,7 +184,7 @@ def toECIfromLatLong(location: TypeLatLong, time: datetime=datetime.now()) -> np
     y = CONSTANT.R * np.cos(np.deg2rad(location.latitude)) * np.sin(np.deg2rad(location.longtitude))
     z = CONSTANT.R * np.sin(np.deg2rad(location.latitude))
     coord = np.array([x, y, z])
-    coord = getRie(time).T @ coord
+    # coord = getRie(time).T @ coord
     return coord
 
 
