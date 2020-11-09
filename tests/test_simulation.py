@@ -14,10 +14,10 @@ def getSimulation():
 
     return Simulation(OE, observer, time=time)
 
-@pytest.mark.xfail
-@pytest.mark.parametrize("dt, true_result",[(3900, np.array([-2936.2922, -5654.01, 0])),\
-(4000,np.array([-389.5577, -6359.079, 0])),\
-(4100,np.array([2224.1957, -5970.1419, 0]))])
+# @pytest.mark.xfail
+@pytest.mark.parametrize("dt, true_result",[(3900, np.array([-4596.8172, 4411.2258, 0])),\
+(4000,np.array([-4628.8618, 4377.5883, 0])),\
+(4100,np.array([-4660.6604, 4343.7180, 0]))])
 def test_calulateObservers(getSimulation, dt:float, true_result):
 
     sim = getSimulation
