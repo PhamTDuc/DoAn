@@ -164,8 +164,9 @@ def getGMST(time: datetime = datetime.now()) -> float:
     # Calculate GTMS[deg] at 0:00 UT
     G0 = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 0.00000002583 * T0**3
 
-    t = (time.hour - 12) / 24 + time.minute / 1440 + time.second / 86400
+    t = time.hour  / 24 + time.minute / 1440 + time.second / 86400
     GMST = G0 + 360.98564724 * t
+    GMST = GMST - GMST//360 * 360
     return GMST
 
 
@@ -184,7 +185,7 @@ def toECIfromLatLong(location: TypeLatLong, time: datetime=datetime.now()) -> np
     y = CONSTANT.R * np.cos(np.deg2rad(location.latitude)) * np.sin(np.deg2rad(location.longtitude))
     z = CONSTANT.R * np.sin(np.deg2rad(location.latitude))
     coord = np.array([x, y, z])
-    # coord = getRie(time).T @ coord
+    coord = getRie(time).T @ coord
     return coord
 
 
