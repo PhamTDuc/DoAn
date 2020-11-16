@@ -29,7 +29,8 @@ class Simulation(object):
         self._update(dt)
         pos = self._getPosInECI()
         observer = self._getObserverECI(dt)
-        return observer, pos
+        direction = pos - observer
+        return observer, direction
 
 
 class OrbitCalculate(object):
@@ -44,8 +45,8 @@ class OrbitCalculate(object):
         self.directions = []
 
         for dt in time_points:
-            observer, pos = self.sim.getAllCoords(dt)
-            direction = normalize(pos - observer)
+            observer, direction = self.sim.getAllCoords(dt)
+            direction = normalize(direction)
             self.observers.append(observer)
             self.directions.append(direction)
 
