@@ -10,6 +10,7 @@ def test_SemimajorAxisfromMeanMotion():
     npt.assert_allclose(OE.semimajor_axis, 6768.0201)
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("dt, expected",[(3900, 136.18028935), (4000, 136.598096813),(4100, 137.0159042756)])
 def test_GMST(dt, expected):
 	time = datetime(year = 2020, month = 4, day= 15, hour=18, minute=22, second=4)
