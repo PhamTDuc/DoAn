@@ -56,7 +56,7 @@ class OrbitCalculate(object):
             raise ValueError("Repeated must be int. Repeated and Alias must be positive.")
 
         if(shouldPrecalculate):
-            preCalculate(time_points)
+            self.preCalculate(time_points)
 
         assert len(self.observers) == 3, "Obeservers must be array of 3 Vec3"
         assert len(self.directions) == 3, "Obeservers must be array of 3 Vec3"
