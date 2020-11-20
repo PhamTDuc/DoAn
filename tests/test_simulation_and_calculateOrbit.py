@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from package.utility import TypeOE, TypeLatLong
+from package.utility import TypeOE, TypeLatLong, normalize
 from package.orbital import Simulation, OrbitCalculate
 import numpy as np
 import numpy.testing as npt
@@ -35,7 +35,17 @@ def test_calculateDirectionVectors(getSimulation, dt: float, true_result):
     direction = sim.getAllCoords(dt)[1]
     npt.assert_almost_equal(direction, true_result, decimal=2)
 
+@pytest.mark.parametrize("dt, true_result", [(3900, np.array([-0.6694, -0.7325, -0.1236])),
+                                             (4000, np.array([-0.6743, -0.7214, 0.1579])),
+                                             (4100, np.array([-0.6027, -0.6704, 0.4328]))])
 
+def test_DirectionNormalize(getSimulation, dt: float, true_result):
+    sim = getSimulation
+    direction = normalize(sim.getAllCoords(dt)[1])
+    npt.assert_almost_equal(direction, true_result, decimal=2)
+
+
+@pytest.mark.skip
 def test_calculateOrbit(getSimulation):
     sim = getSimulation
     orbit = OrbitCalculate(sim)
