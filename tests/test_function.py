@@ -21,6 +21,7 @@ def test_Gauss():
     npt.assert_allclose(dataclasses.astuple(OE_cal), dataclasses.astuple(OE_sample))
 
 
+@pytest.mark.skip
 def test_calVecInPQW():
     OE = TypeOE(eccentricity=0.0013752048537967394, semimajor_axis=6890.542965539954, inclination=1.696632359184506, right_ascension=2.7786596260229453, argument_of_perigee=0.24912363887968036, mean_anomaly=-0.18780826514804805)
     mean_anomaly = calMeanAnomaly(OE.mean_anomaly, OE.semimajor_axis, dt=-100)

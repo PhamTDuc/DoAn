@@ -1,3 +1,4 @@
+import random
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Tuple
@@ -25,10 +26,16 @@ class Simulation(object):
         toECI = getMatECItoPQW(i=self._OE.inclination, omega=self._OE.argument_of_perigee, sigma=self._OE.right_ascension)
         return toECI.T @ pos_pqw
 
+    def _makeAlias(self, min=0, max=1, random_seed=None) -> np.array:
+        random.seed(random_seed)
+        return np.array([random.uniform(min, max), random.uniform(min, max), random.uniform(min, max)], dtype="float64")
+
     def getAllCoords(self, dt: float) -> Tuple[np.array, np.array]:
-        self._update(dt)
+        mean_anomaly = calMeanAnomaly(self._OE.mean_anomaly, self._OE.semimajor_axis, dt)
+        self.eccentric_anomaly = calEccentricAnomaly(mean_anomaly, self._OE.eccentricity, alias=1)
         pos = self._getPosInECI()
-        observer = self._getObserverECI(dt)
+        alias = self._makeAlias(0, 0)
+        observer = self._getObserverECI(dt) + alias
         direction = pos - observer
         return observer, direction
 
@@ -85,8 +92,8 @@ class OrbitCalculate(object):
         a = -(A**2 + 2 * A * E + np.linalg.norm(self.observers[1])**2)
         b = -2 * CONSTANT.GM * B * (A + E)
         c = -CONSTANT.GM**2 * B**2
-        print("A: ", A, "B: ", B, "E: ", E)
-        print("a: ", a, "b: ", b, "c: ", c)
+        # print("A: ", A, "B: ", B, "E: ", E)
+        # print("a: ", a, "b: ", b, "c: ", c)
         # Solve |r2|
         # Using Newton's method to Solve Equation of |r2|
         # (x^8 + a*x^6 + b*x^3+  c = 0)
@@ -122,7 +129,6 @@ class OrbitCalculate(object):
         g3 = t3 - CONSTANT.GM * t3**3 / 6 / r**3
 
         v2 = (f1 * r3 - f3 * r1) / (f1 * g3 - f3 * g1)
-        print(calc_oe_from_sv(r2, v2))
         return calc_oe_from_sv(r2, v2)
 
 
