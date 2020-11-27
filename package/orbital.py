@@ -64,7 +64,7 @@ class OrbitCalculate(object):
 
         if(shouldPrecalculate):
             self.preCalculate(time_points)
-
+        print(self.observers, self.directions)
         assert len(self.observers) == 3, "Obeservers must be array of 3 Vec3"
         assert len(self.directions) == 3, "Obeservers must be array of 3 Vec3"
         t1 = time_points[0] - time_points[1]
@@ -92,8 +92,8 @@ class OrbitCalculate(object):
         a = -(A**2 + 2 * A * E + np.linalg.norm(self.observers[1])**2)
         b = -2 * CONSTANT.GM * B * (A + E)
         c = -CONSTANT.GM**2 * B**2
-        # print("A: ", A, "B: ", B, "E: ", E)
-        # print("a: ", a, "b: ", b, "c: ", c)
+        print("A: ", A, "B: ", B, "E: ", E)
+        print("a: ", a, "b: ", b, "c: ", c)
         # Solve |r2|
         # Using Newton's method to Solve Equation of |r2|
         # (x^8 + a*x^6 + b*x^3+  c = 0)
@@ -129,6 +129,8 @@ class OrbitCalculate(object):
         g3 = t3 - CONSTANT.GM * t3**3 / 6 / r**3
 
         v2 = (f1 * r3 - f3 * r1) / (f1 * g3 - f3 * g1)
+        print("R2, V2",r2, v2)
+        print("OE",calc_oe_from_sv(r2, v2))
         return calc_oe_from_sv(r2, v2)
 
 

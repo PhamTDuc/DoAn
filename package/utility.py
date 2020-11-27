@@ -156,15 +156,18 @@ def getGMST(time: datetime = datetime.now()) -> float:
     a = (14 - time.month) // 12
     y = time.year + 4800 - a
     m = time.month + 12 * a - 3
-    JND = time.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+    JND = time.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045 - 0.5
+    print(JND)
 
     # Calculate Century from J2000
     T0 = (JND - 2451545) / 36525
+    print(T0)
 
     # Calculate GTMS[deg] at 0:00 UT
     G0 = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 0.00000002583 * T0**3
 
     t = time.hour  / 24 + time.minute / 1440 + time.second / 86400
+    print(t)
     GMST = G0 + 360.98564724 * t
     GMST = GMST - GMST//360 * 360
     return GMST
