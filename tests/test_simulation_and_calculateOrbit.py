@@ -49,11 +49,19 @@ def test_DirectionNormalize(getSimulation, dt: float, true_result):
 
 
 # @pytest.mark.skip
-def test_Gauss(getSimulation):
+# def test_Gauss(getSimulation):
+#     sim = getSimulation
+#     orbit = OrbitCalculate(sim)
+#     # orbit.observers = [np.array([-4596.8172, 4411.2258, 0]), np.array([-4628.8618, 4377.5883, 0]), np.array([-4660.6604, 4343.7180, 0])]
+#     # orbit.directions = [np.array([-0.6694, -0.7325, -0.1236]), np.array([-0.6743, -0.7214, 0.1579]), np.array([-0.6027, -0.6704, 0.4328])]
+#     Calculated_OE = orbit.calculate([3900, 4000, 4100], shouldPrecalculate=True)
+#     Expedted_OE = TypeOE(eccentricity=0.009431418961541798, semimajor_axis=6809.778031000419, inclination=1.696733706840077, right_ascension=2.7775731301469375, argument_of_perigee=3.006356982240637, mean_anomaly=-2.942070455156746)
+#     assert(Calculated_OE == Expedted_OE)
+
+
+def test_Gauss_RV(getSimulation):
     sim = getSimulation
     orbit = OrbitCalculate(sim)
-    # orbit.observers = [np.array([-4596.8172, 4411.2258, 0]), np.array([-4628.8618, 4377.5883, 0]), np.array([-4660.6604, 4343.7180, 0])]
-    # orbit.directions = [np.array([-0.6694, -0.7325, -0.1236]), np.array([-0.6743, -0.7214, 0.1579]), np.array([-0.6027, -0.6704, 0.4328])]
-    Calculated_OE = orbit.calculate([3900, 4000, 4100], shouldPrecalculate=True)
-    Expedted_OE = TypeOE(eccentricity=0.009431418961541798, semimajor_axis=6809.778031000419, inclination=1.696733706840077, right_ascension=2.7775731301469375, argument_of_perigee=3.006356982240637, mean_anomaly=-2.942070455156746)
-    assert(Calculated_OE == Expedted_OE)
+    r2_v2 = orbit.calculate([3900, 4000, 4100])
+    npt.assert_almost_equal(r2_v2[0], np.array([-6392.0838, 2491.2094, 412.8915])), "Asssert r2 calculated vs r2_expected"
+    npt.assert_almost_equal(r2_v2[1], np.array([0.7804, 0.7196, 7.5057])), "Asssert v2 calculated vs v2_expected"
