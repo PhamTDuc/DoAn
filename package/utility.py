@@ -157,19 +157,19 @@ def getGMST(time: datetime = datetime.now()) -> float:
     y = time.year + 4800 - a
     m = time.month + 12 * a - 3
     JND = time.day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045 - 0.5
-    print(JND)
+    # print(JND)
 
     # Calculate Century from J2000
     T0 = (JND - 2451545) / 36525
-    print(T0)
+    # print(T0)
 
     # Calculate GTMS[deg] at 0:00 UT
     G0 = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 0.00000002583 * T0**3
 
-    t = time.hour  / 24 + time.minute / 1440 + time.second / 86400
-    print(t)
+    t = time.hour / 24 + time.minute / 1440 + time.second / 86400
+    # print(t)
     GMST = G0 + 360.98564724 * t
-    GMST = GMST - GMST//360 * 360
+    GMST = GMST - GMST // 360 * 360
     return GMST
 
 
@@ -201,8 +201,21 @@ def normalize(vec: np.array) -> np.array:
     return vec / norm
 
 
+def getDiffAngle(u: np.array, v: np.array, in_degrees=True) -> float:
+    """Return the angle of two vectors
+    if in_degrees, return angle in Degree 
+    else return in Radian
+    """
+    rad = np.arccos(np.clip(np.dot(u, v), -1, 1), dtype=np.float64)
+    if not in_degrees:
+        return rad
+    return np.rad2deg(np.arccos(np.clip(np.dot(u, v), -1, 1), dtype=np.float64), dtype=np.float64)
+
+
 if __name__ == "__main__":
     print(CONSTANT.PI)
     print(CONSTANT.G)
     print(CONSTANT.GM)
     # print(toECIfromLatLong())
+    degrees = getDiffAngle([1, 0, 0], [-1, 0, 0])
+    print(degrees)

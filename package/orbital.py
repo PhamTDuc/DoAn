@@ -26,16 +26,16 @@ class Simulation(object):
         toECI = getMatECItoPQW(i=self._OE.inclination, omega=self._OE.argument_of_perigee, sigma=self._OE.right_ascension)
         return toECI.T @ pos_pqw
 
-    def _makeAlias(self, min=0, max=1, random_seed=None) -> np.array:
-        random.seed(random_seed)
-        return np.array([random.uniform(min, max), random.uniform(min, max), random.uniform(min, max)], dtype="float64")
+    # def _makeAlias(self, min=0, max=1, random_seed=None) -> np.array:
+    #     random.seed(random_seed)
+    #     return np.array([random.uniform(min, max), random.uniform(min, max), random.uniform(min, max)], dtype="float64")
 
     def getAllCoords(self, dt: float) -> Tuple[np.array, np.array]:
         mean_anomaly = calMeanAnomaly(self._OE.mean_anomaly, self._OE.semimajor_axis, dt)
         self.eccentric_anomaly = calEccentricAnomaly(mean_anomaly, self._OE.eccentricity, alias=1)
         pos = self._getPosInECI()
-        alias = self._makeAlias(0, 0)
-        observer = self._getObserverECI(dt) + alias
+        # alias = self._makeAlias(0, 0)
+        observer = self._getObserverECI(dt)
         direction = pos - observer
         return observer, direction
 
@@ -47,24 +47,25 @@ class OrbitCalculate(object):
         self.observers = []
         self.directions = []
 
-    def preCalculate(self, time_points: Tuple[float, float, float]):
+    def preCalculate(self, time_points: Tuple[float, float, float], observer_alias: np.array=np.array([0, 0, 0])):
         self.observers = []
         self.directions = []
 
         for dt in time_points:
             observer, direction = self.sim.getAllCoords(dt)
+            observer += observer_alias
             direction = normalize(direction)
             self.observers.append(observer)
             self.directions.append(direction)
 
-    def calculate(self, time_points: Tuple[float, float, float], r0: float=600, repeated: int=10000, alias: float = 0.1, shouldPrecalculate: bool=True) -> TypeOE:
+    def calculate(self, time_points: Tuple[float, float, float], r0: float=600, repeated: int=10000, alias: float = 0.1, shouldPrecalculate: bool=True) -> Tuple[np.array, np.array]:
 
         if (repeated < 0 or alias < 0):
             raise ValueError("Repeated must be int. Repeated and Alias must be positive.")
 
         if(shouldPrecalculate):
             self.preCalculate(time_points)
-        print(self.observers, self.directions)
+        # print(self.observers, self.directions)
         assert len(self.observers) == 3, "Obeservers must be array of 3 Vec3"
         assert len(self.directions) == 3, "Obeservers must be array of 3 Vec3"
         t1 = time_points[0] - time_points[1]
@@ -92,8 +93,8 @@ class OrbitCalculate(object):
         a = -(A**2 + 2 * A * E + np.linalg.norm(self.observers[1])**2)
         b = -2 * CONSTANT.GM * B * (A + E)
         c = -CONSTANT.GM**2 * B**2
-        print("A: ", A, "B: ", B, "E: ", E)
-        print("a: ", a, "b: ", b, "c: ", c)
+        # print("A: ", A, "B: ", B, "E: ", E)
+        # print("a: ", a, "b: ", b, "c: ", c)
         # Solve |r2|
         # Using Newton's method to Solve Equation of |r2|
         # (x^8 + a*x^6 + b*x^3+  c = 0)
@@ -129,9 +130,9 @@ class OrbitCalculate(object):
         g3 = t3 - CONSTANT.GM * t3**3 / 6 / r**3
 
         v2 = (f1 * r3 - f3 * r1) / (f1 * g3 - f3 * g1)
-        print("R2, V2",r2, v2)
-        print("OE",calc_oe_from_sv(r2, v2))
-        return calc_oe_from_sv(r2, v2)
+        # print("R2, V2",r2, v2)
+        # print("OE",calc_oe_from_sv(r2, v2))
+        return r2, v2
 
 
 if __name__ == "__main__":
