@@ -2,7 +2,7 @@ from datetime import datetime
 import numpy as np
 from package.utility import TypeLatLong, TypeOE, getDiffAngle
 from package.orbital import Simulation, OrbitCalculate
-
+import matplotlib.pyplot as plt
 
 """
 TISAT 1                 
@@ -17,8 +17,11 @@ if __name__ == "__main__":
     time = datetime(year=2020, month=4, day=15, hour=18, minute=22, second=4)
     observer = TypeLatLong(0, 0)
 
-    r2_expected = np.array([-6392.0838, 2491.2094, 412.8915])
-    v2_expected = np.array([0.7804, 0.7196, 7.5057])
+    # r2_expected = np.array([-6392.0838, 2491.2094, 412.8915])
+    # v2_expected = np.array([0.7804, 0.7196, 7.5057])
+
+    r2_expected = np.array([-6384.8773242, 2497.81798463, 463.89455914])
+    v2_expected = np.array([0.83321341, 0.6980882, 7.50396268])
 
     # Preparation for calculate from different observers
     linspace = np.linspace(0, 400, num=20, endpoint=True)
@@ -35,11 +38,14 @@ if __name__ == "__main__":
     for i in range(0, len(linspace)):
         sim = Simulation(OE, observer, time=time)
         orbit_calculate = OrbitCalculate(sim)
-        orbit_calculate.preCalculate([3900, 4000, 4100], observer_alias=np.array([linspace[i], linspace[i], linspace[i]]))
+        orbit_calculate.preCalculate([3900, 4000, 4100], observer_alias=np.array([linspace[i], 0, 0]))
         r2s[i], v2s[i] = orbit_calculate.calculate([3900, 4000, 4100], shouldPrecalculate=False)
         diff_r[i] = getDiffAngle(r2s[i], r2_expected, False)
         diff_v[i] = getDiffAngle(v2s[i], v2_expected)
 
-    print(diff_r[10])
-    print(diff_v[10])
-    print(r2s[10])
+    # print(diff_r[10])
+    # print(diff_v[10])
+    # print(r2s[10])
+    plt.plot(linspace, r2s[:, 0])
+    plt.axhline(y=r2_expected[0], xmin=0, xmax=400, color='red', linewidth=1)
+    plt.show()
