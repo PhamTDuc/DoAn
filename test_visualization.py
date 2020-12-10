@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 
 # axes[0].axhline(y=1, xmin=-2, xmax=2, color = 'red', linewidth = 0.5, linestyle='--')
 
-x = np.linspace(-2*np.pi, 2*np.pi, num=100, endpoint=True)
+x = np.linspace(-2 * np.pi, 2 * np.pi, num=100, endpoint=True)
 y = np.sin(x)
 plt.plot(x, y, color='red', linewidth=1.5)
-plt.
+
 plt.show()

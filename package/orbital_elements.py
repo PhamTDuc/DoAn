@@ -15,7 +15,7 @@ def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
             - w: argument of periapsis              [rad]
             - MA: mean anomaly                      [rad]
     """
-    OE = TypeOE()
+    # OE = TypeOE()
 
     # Set a number below which the eccentricity is considered to be zero
     eps = 0.0000000001
@@ -34,7 +34,7 @@ def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
     h = np.linalg.norm(H)
 
     # Calculate the inclination
-    OE.inclination = np.arccos(H[2] / h)
+    inclination = np.arccos(H[2] / h)
 
     # Calculate vector N that defines the node line and its magnitude
     N = np.cross(np.array([0, 0, 1]), H)
@@ -47,12 +47,12 @@ def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
             ra = 2 * np.pi - ra
     else:
         ra = 0
-    OE.right_ascension = ra
+    # right_ascension = ra
 
     # Calculate the eccentricity
     E = 1 / CONSTANT.GM * ((v * v - CONSTANT.GM / r) * R - r * vr * V)
     e = np.linalg.norm(E)
-    OE.eccentricity = e
+    # eccentricity = e
 
     # Calculate the argument of perigee
     if n != 0:
@@ -64,7 +64,7 @@ def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
             w = 0
     else:
         w = 0
-    OE.argument_of_perigee = w
+    # argument_of_perigee = w
 
     # Calculate the true anomaly
     if e > eps:
@@ -82,10 +82,10 @@ def calc_oe_from_sv(R: np.array, V: np.array) -> TypeOE:
 
     # Calculate the mean anomaly
     MA = EA - e * np.sin(EA)
-    OE.mean_anomaly = MA
+    # mean_anomaly = MA
 
     # Calculate the semimajor axis
     a = h * h / CONSTANT.GM / (1 - e * e)
-    OE.semimajor_axis = a
+    # semimajor_axis = a
 
-    return OE
+    return TypeOE(inclination=inclination, right_ascension=ra, eccentricity=e, argument_of_perigee=w, mean_anomaly=MA, semimajor_axis=a)
