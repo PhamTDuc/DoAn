@@ -29,7 +29,7 @@ if __name__ == "__main__":
     v2_expected = np.array([0.83321341, 0.6980882, 7.50396268])
 
     # Preparation for calculate from different observers
-    linspace = np.linspace(0, 80, num=41, endpoint=True)
+    linspace = np.linspace(0, 10, num=161, endpoint=True)
 
     r2s = np.zeros(len(linspace) * 3)
     r2s.resize((len(r2s) // 3, 3))
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         orbit_calculate = OrbitCalculate(sim)
         alias = np.array([random.random(), random.random(), random.random()])
         alias = normalize(alias)
-        orbit_calculate.preCalculate([3900, 4000, 4100], observer_alias=[linspace[i], 0, 0])
+        orbit_calculate.preCalculate([3900, 4000, 4100], observer_alias=linspace[i] * alias)
         r2s[i], v2s[i] = orbit_calculate.calculate([3900, 4000, 4100], shouldPrecalculate=False)
         # diff_r[i] = getDiffAngle(r2s[i], r2_expected, False)
         # diff_v[i] = getDiffAngle(v2s[i], v2_expected)
@@ -61,14 +61,18 @@ if __name__ == "__main__":
     # print(diff_r[10])
     # print(diff_v[10])
     # print(r2s[10])
-    plot_with_axhline(linspace, diff_incls, color='red')
     # plt.plot(linspace, diff_incls)
     # plt.show()
-    title = "Change in X axis"
-    plot_with_axhline(linspace, diff_right_ascensions, color='green')
-    plot_with_axhline(linspace, diff_right_ascensions, color='green', title=title, legends=['inclination', 'right_ascension'])
+    title = "Sai số random theo cả ba trục"
+    plt.xlim(left=0,right=linspace[-1])
+    # plt.ylim(bottom=0, top=diff_argument_of_perigees[-1])
+    # plt.ylim(bottom=0, top=diff_incls[-1] * 2)
+    plot_with_axhline(linspace, diff_incls, color='red')
+    # plot_with_axhline(linspace, diff_right_ascensions, color='green')
+    plot_with_axhline(linspace, diff_right_ascensions, color='green', title=title, legends=['Góc nghiêng', 'Góc điểm lên'])
     # plot_with_axhline(linspace, diff_argument_of_perigees, title="Difference when change X axis", color='blue', legends=['\u0394 inclination', '\u0394 right_ascension', '\u0394 argument_of_perigee'])
-    plt.xlabel("Units: km")
+    # plot_with_axhline(linspace, diff_argument_of_perigees, title=title, color='blue', legends=['góc cận điểm'])
+    plt.xlabel("Đơn vị: km")
     show_plots()
     # print(linspace[1])
     # print(linspace[0])
